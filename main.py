@@ -2,7 +2,7 @@ import requests
 import argparse
 from time import sleep
 from typing import Optional, Any, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import re
 import sys
 
@@ -11,7 +11,7 @@ class QdbEntity:
     eid: str
     etype: str
     name: str
-    fields: dict[str, Any] = {}
+    fields: dict[str, Any] = field(default_factory=dict)
 
 class QdbClient:
     def __init__(self, url: str) -> None:
