@@ -99,7 +99,7 @@ class QdbClient:
         for entity in entities:
             for field in fields:
                 request["payload"]["requests"].append({
-                    "entityId": entity.eid,
+                    "id": entity.eid,
                     "field": field
                 })
         
@@ -131,7 +131,7 @@ class QdbClient:
                 print(f"Failed to write field '{field}' with value '{value}'. Invalid value type.")
                 return False
             request["payload"]["requests"].append({
-                "entityId": entityId,
+                "id": entityId,
                 "field": field,
                 "value": {
                     "@type": "type.googleapis.com/" + typeName,
@@ -185,13 +185,18 @@ class QdbClient:
         return response["payload"]["notifications"]
 
     def listen(self, entityTypeOrId: str, field: str, context: List[str], notifyOnChange: bool) -> None:
-        if self.register_notification(entityTypeOrId, field, context, notifyOnChange):
+        template = self.message_template()
+        if self.register_notification(entityTypeOrId, field, context, notifyOnChange, template):
+            print(f"Listening for notifications for entity '{entityTypeOrId}'. Press Ctrl+C to stop.")
             try:
                 while True:
-                    notifications = self.get_notifications()
+                    notifications = self.get_notifications(template)
                     for notification in notifications:
-                        print(notification)
-                        print()
+                        print(f"Entity ID={notification['current']['id']} at {notification['current']['writeTime']}")
+                        print(f"  {notification['current']['name']}: {notification['current']['value']['raw']} (from {notification['previous']['value']['raw']})")
+                        print("  Context:")
+                        for index, nContext in enumerate(notification['context']):
+                            print(f"    {index}. {nContext['name']}: {nContext['value']['raw']}")
                     sleep(1)
             except KeyboardInterrupt:
                 pass
@@ -210,7 +215,7 @@ def main():
 
     # Write Command
     write_parser = subparsers.add_parser("write", help="Write fields to an entity.")
-    write_parser.add_argument("entityId", type=str, help="The entity ID.")
+    write_parser.add_argument("entity", type=str, help="The entity ID.")
     write_parser.add_argument("fields", nargs='+', type=str, help="The fields to write in 'field=value' format.")
 
     # Listen Command
@@ -225,7 +230,7 @@ def main():
     client = QdbClient(args.url)
 
     if args.command == "read":
-        entities = client.read(args.entityTypeOrId, args.fields)
+        entities = client.read(args.entity, args.fields)
         for entity in entities:
             print(f"Entity ID: {entity.eid}, Type: {entity.etype}, Name: {entity.name}")
             for field, value in entity.fields.items():
@@ -234,11 +239,11 @@ def main():
 
     elif args.command == "write":
         fields = {k: v for k, v in (field.split('=') for field in args.fields)}
-        success = client.write(args.entityId, fields)
+        success = client.write(args.entity, fields)
         print("Write successful" if success else "Write failed")
 
     elif args.command == "listen":
-        client.listen(args.entityTypeOrId, args.field, args.context, args.notifyOnChange)
+        client.listen(args.entity, args.field, args.context, args.notifyOnChange)
 
 if __name__ == '__main__':
     main()
