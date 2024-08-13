@@ -15,7 +15,7 @@ class QdbEntity:
 
 class QdbClient:
     def __init__(self, url: str) -> None:
-        self._url: str = url
+        self._url: str = url.rstrip('/')
 
     def __extract_type_and_value(self, s: str) -> tuple[Optional[str], Optional[Any]]:
         pattern = r'(?P<type>qdb\.\w+)\((?P<value>.+)\)'
@@ -199,7 +199,7 @@ class QdbClient:
 def main():
     parser = argparse.ArgumentParser(description="CLI tool for interacting with the QDB API.")
     
-    parser.add_argument("--url", type=str, required=True, help="The base URL for the QDB API.")
+    parser.add_argument("--url", type=str, default="http://database.local", help="The base URL for the QDB API.")
     
     subparsers = parser.add_subparsers(dest="command", required=True)
 
