@@ -50,8 +50,8 @@ class QdbClient:
         request.update(template)
         request.update({
             "payload": {
-                "@type": "type.googleapis.com/qdb.WebRuntimeGetEntityRequest",
-                "entityId": entityId
+                "@type": "type.googleapis.com/qdb.WebConfigGetEntityRequest",
+                "id": entityId
             }
         })
 
