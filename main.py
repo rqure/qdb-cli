@@ -28,7 +28,6 @@ class QdbClient:
             "qdb.Bool": bool,
             "qdb.Timestamp": str,
             "qdb.ConnectionState": str,
-            "qdb.GarageDoorState": str,
         }
 
         match = re.search(pattern, s)
